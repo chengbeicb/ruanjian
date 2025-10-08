@@ -1,0 +1,63 @@
+# Maven 项目构建目录
+backend/target/
+
+# IDE 相关文件
+backend/.idea/
+backend/*.iml
+backend/*.ipr
+backend/*.iws
+
+# 日志文件
+backend/logs/
+backend/*.log
+
+# 临时文件
+backend/*.tmp
+backend/*.temp
+backend/.cache/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 环境配置文件
+backend/.env
+backend/.env.local
+backend/.env.development.local
+backend/.env.test.local
+backend/.env.production.local
+
+# 数据库文件
+backend/h2.mv.db
+backend/h2.trace.db
+
+# 前端依赖
+frontend/node_modules/
+
+# 前端构建文件
+frontend/dist/
+frontend/build/
+
+# 前端日志
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# 前端环境变量
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# 前端临时文件
+frontend/.temp/
+frontend/.cache/
+
+# IDE 配置
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
