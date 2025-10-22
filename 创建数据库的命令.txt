@@ -1,1 +1,5 @@
+初始化数据库命令
 CREATE DATABASE shopdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+Invoke-WebRequest -Uri http://localhost:8080/seller/init -Method Post
+终端接口调用初始化卖家账户
