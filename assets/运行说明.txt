@@ -1,0 +1,17 @@
+【项目运行说明】
+
+1. 环境要求：
+   - Java 8 或更高版本
+   - 需要数据库配置
+
+2. 运行命令：
+   java -jar rjgcsj-backend-1.0.0.jar
+
+3. 访问地址：
+   http://localhost:8080
+
+4. 如果端口冲突，使用：
+   java -jar rjgcsj-backend-1.0.0.jar --server.port=8081
+
+5. 停止应用：
+   按 Ctrl+C
