@@ -2,6 +2,8 @@ package com.shop.entity;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -13,11 +15,14 @@ public class Product {
     
     private String name;
     
-    private String description;
+    @Column(columnDefinition = "TEXT")
+    private String description; // 支持富媒体描述
     
     private Double price;
     
-    private String imageUrl;
+    // 多图片支持，使用逗号分隔的图片URL列表
+    @Column(columnDefinition = "TEXT")
+    private String imageUrls;
     
     @Enumerated(EnumType.STRING)
     private ProductStatus status;
@@ -25,6 +30,15 @@ public class Product {
     @ManyToOne
     @JoinColumn(name = "seller_id")
     private Seller seller;
+    
+    // 库存数量
+    private Integer stockQuantity;
+    
+    // 一级分类
+    private String categoryLevel1;
+    
+    // 二级分类
+    private String categoryLevel2;
     
     private LocalDateTime createTime;
     
@@ -70,12 +84,36 @@ public class Product {
         this.price = price;
     }
     
-    public String getImageUrl() {
-        return imageUrl;
+    public String getImageUrls() {
+        return imageUrls;
     }
     
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setImageUrls(String imageUrls) {
+        this.imageUrls = imageUrls;
+    }
+    
+    public Integer getStockQuantity() {
+        return stockQuantity;
+    }
+    
+    public void setStockQuantity(Integer stockQuantity) {
+        this.stockQuantity = stockQuantity;
+    }
+    
+    public String getCategoryLevel1() {
+        return categoryLevel1;
+    }
+    
+    public void setCategoryLevel1(String categoryLevel1) {
+        this.categoryLevel1 = categoryLevel1;
+    }
+    
+    public String getCategoryLevel2() {
+        return categoryLevel2;
+    }
+    
+    public void setCategoryLevel2(String categoryLevel2) {
+        this.categoryLevel2 = categoryLevel2;
     }
     
     public ProductStatus getStatus() {

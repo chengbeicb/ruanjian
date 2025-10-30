@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface PurchaseIntentRepository extends JpaRepository<PurchaseIntent, Long> {
     List<PurchaseIntent> findByProductSellerId(Long sellerId);
-    Optional<PurchaseIntent> findByProductIdAndCompletedFalse(Long productId);
+    List<PurchaseIntent> findByProductId(Long productId);
+    List<PurchaseIntent> findByCustomerId(Long customerId);
     Optional<PurchaseIntent> findByProductIdAndCompletedFalseAndCanceledFalse(Long productId);
 }

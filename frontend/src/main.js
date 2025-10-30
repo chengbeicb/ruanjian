@@ -22,17 +22,27 @@ axios.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
+      // 清除认证信息
       localStorage.removeItem('auth')
-      // 检查当前是否已经在登录页面，避免重复导航
-      if (router.currentRoute.path !== '/seller/login') {
-        router.push('/seller/login')
+      localStorage.removeItem('customerUsername')
+      
+      // 根据当前路由判断重定向到对应的登录页面
+      const currentPath = router.currentRoute.path
+      if (!currentPath.startsWith('/seller/login') && !currentPath.startsWith('/customer/login')) {
+        // 如果是卖家相关路由，重定向到卖家登录
+        if (currentPath.startsWith('/seller/')) {
+          router.push('/seller/login')
+        } else if (currentPath.startsWith('/customer/')) {
+          // 如果是客户相关路由，重定向到客户登录
+          router.push('/customer/login')
+        }
       }
     }
     return Promise.reject(error)
   }
 )
 
-// 关键修复：添加缺失的$validateAuth方法
+// 卖家认证验证方法
 Vue.prototype.$validateAuth = function() {
   const auth = localStorage.getItem('auth')
   if (!auth) {
@@ -45,6 +55,13 @@ Vue.prototype.$validateAuth = function() {
   } catch (e) {
     return false
   }
+}
+
+// 客户认证验证方法
+Vue.prototype.$validateCustomerAuth = function() {
+  const customerUsername = localStorage.getItem('customerUsername')
+  // 简单检查是否存在客户用户名
+  return !!customerUsername
 }
 
 Vue.use(Vuetify)

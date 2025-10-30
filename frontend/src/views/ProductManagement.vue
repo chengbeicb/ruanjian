@@ -22,33 +22,92 @@
                 required
                 :rules="[v => !!v || '请输入商品名称']"
               ></v-text-field>
-              <v-text-field
+              <!-- 富文本编辑器 -->
+              <v-textarea
                 v-model="productForm.description"
-                label="商品描述"
+                label="商品描述（支持富文本）"
                 required
-                multiline
-                rows="3"
+                rows="5"
                 :rules="[v => !!v || '请输入商品描述']"
-              ></v-text-field>
+              ></v-textarea>
+              <small class="text-secondary">可以输入HTML标签实现富文本效果</small>
               
-              <!-- 修改图片上传部分 -->
-              <div v-if="!editingProduct || !productForm.imageUrl" class="mb-4">
+              <!-- 多图片上传 -->
+              <div class="mb-4">
                 <v-file-input
-                  v-model="selectedFile"
-                  label="选择本地图片"
+                  v-model="selectedFiles"
+                  label="选择图片（可多选）"
                   accept="image/*"
-                  @change="handleFileChange"
+                  multiple
+                  @change="handleFilesChange"
                 ></v-file-input>
               </div>
               
-              <div v-if="productForm.imageUrl" class="mb-4">
-                <v-img
-                  :src="productForm.imageUrl"
-                  aspect-ratio="16/9"
-                  class="grey lighten-2 mb-2"
-                ></v-img>
-                <v-btn @click="clearImage" color="error" text>清除图片</v-btn>
+              <!-- 已上传图片预览 -->
+              <div v-if="productForm.imageUrls && productForm.imageUrls.length > 0" class="mb-4">
+                <h4>已上传图片</h4>
+                <v-layout row wrap>
+                  <v-flex xs3 md2 v-for="(url, index) in productForm.imageUrls" :key="index">
+                    <div class="relative">
+                      <v-img
+                        :src="url"
+                        aspect-ratio="1/1"
+                        class="grey lighten-2 mb-2"
+                      ></v-img>
+                      <v-btn
+                        absolute
+                        top="0"
+                        right="0"
+                        icon
+                        color="error"
+                        small
+                        @click="removeImage(index)"
+                      >
+                        <v-icon>mdi-close</v-icon>
+                      </v-btn>
+                    </div>
+                  </v-flex>
+                </v-layout>
               </div>
+              
+              <!-- 分类选择 -->
+              <v-layout row wrap>
+                <v-flex xs12 sm6 class="mb-2">
+                  <v-select
+                    v-model="productForm.categoryLevel1"
+                    label="一级分类"
+                    :items="categoryLevel1Options"
+                    item-text="name"
+                    item-value="value"
+                    required
+                    :rules="[v => !!v || '请选择一级分类']"
+                  ></v-select>
+                </v-flex>
+                <v-flex xs12 sm6 class="mb-2">
+                  <v-select
+                    v-model="productForm.categoryLevel2"
+                    label="二级分类"
+                    :items="categoryLevel2Options"
+                    item-text="name"
+                    item-value="value"
+                    required
+                    :rules="[v => !!v || '请选择二级分类']"
+                    :disabled="!productForm.categoryLevel1"
+                  ></v-select>
+                </v-flex>
+              </v-layout>
+              
+              <!-- 库存数量 -->
+              <v-text-field
+                v-model="productForm.stockQuantity"
+                label="库存数量"
+                type="number"
+                required
+                :rules="[
+                  v => !!v || '请输入库存数量',
+                  v => !isNaN(Number(v)) && Number(v) >= 0 || '请输入有效的库存数量'
+                ]"
+              ></v-text-field>
               
               <v-text-field
                 v-model="productForm.price"
@@ -163,10 +222,53 @@ export default {
       productForm: {
         name: '',
         description: '',
-        imageUrl: '',
+        imageUrls: [],
+        categoryLevel1: '',
+        categoryLevel2: '',
+        stockQuantity: 0,
         price: ''
       },
-      selectedFile: null, // 新增：用于存储选择的文件
+      selectedFiles: [], // 用于多图片上传
+      categoryLevel1Options: [
+        { name: '电子产品', value: '电子产品' },
+        { name: '服装鞋帽', value: '服装鞋帽' },
+        { name: '家居生活', value: '家居生活' },
+        { name: '食品饮料', value: '食品饮料' },
+        { name: '图书文具', value: '图书文具' }
+      ],
+      categoryLevel2Options: [],
+      categoryMap: {
+        '电子产品': [
+          { name: '手机', value: '手机' },
+          { name: '电脑', value: '电脑' },
+          { name: '家电', value: '家电' },
+          { name: '配件', value: '配件' }
+        ],
+        '服装鞋帽': [
+          { name: '男装', value: '男装' },
+          { name: '女装', value: '女装' },
+          { name: '鞋子', value: '鞋子' },
+          { name: '配饰', value: '配饰' }
+        ],
+        '家居生活': [
+          { name: '家具', value: '家具' },
+          { name: '厨具', value: '厨具' },
+          { name: '床上用品', value: '床上用品' },
+          { name: '收纳整理', value: '收纳整理' }
+        ],
+        '食品饮料': [
+          { name: '零食', value: '零食' },
+          { name: '饮料', value: '饮料' },
+          { name: '生鲜', value: '生鲜' },
+          { name: '粮油', value: '粮油' }
+        ],
+        '图书文具': [
+          { name: '图书', value: '图书' },
+          { name: '文具', value: '文具' },
+          { name: '办公用品', value: '办公用品' },
+          { name: '体育用品', value: '体育用品' }
+        ]
+      },
       saving: false,
       products: [],
       // 修复这里 - 将snackbar从布尔值改为对象
@@ -180,38 +282,49 @@ export default {
       // snackbarColor: ''
     }
   },
+  watch: {
+    'productForm.categoryLevel1'(newValue) {
+      // 当一级分类改变时，更新二级分类选项
+      this.productForm.categoryLevel2 = '';
+      if (newValue) {
+        this.categoryLevel2Options = this.categoryMap[newValue] || [];
+      } else {
+        this.categoryLevel2Options = [];
+      }
+    }
+  },
   mounted() {
     this.fetchProducts()
   },
   methods: {
-    // 处理文件选择变化
-    handleFileChange(file) {
-      if (file) {
-        // 创建FormData对象
-        const formData = new FormData()
-        formData.append('file', file)
+    // 处理多文件选择变化
+    handleFilesChange(files) {
+      if (files && files.length > 0) {
+        const uploadPromises = files.map(file => {
+          const formData = new FormData()
+          formData.append('file', file)
+          
+          return this.$http.post('/files/upload', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }).then(response => {
+            return response.data.url
+          })
+        })
         
-        // 上传文件到后端
-        this.$http.post('/files/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
-        .then(response => {
-          // 保存返回的图片URL
-          this.productForm.imageUrl = response.data
-        })
-        .catch(error => {
-          console.error('文件上传失败:', error)
-          this.showSnackbar('图片上传失败', 'error')
-        })
+        Promise.all(uploadPromises)
+          .then(urls => {
+            this.productForm.imageUrls = [...this.productForm.imageUrls, ...urls]
+          })
+          .catch(error => {
+            console.error('上传文件失败:', error)
+            this.showSnackbar('图片上传失败', 'error')
+          })
       }
     },
-    
-    // 清除已选择的图片
-    clearImage() {
-      this.productForm.imageUrl = ''
-      this.selectedFile = null
+    removeImage(index) {
+      this.productForm.imageUrls.splice(index, 1)
     },
     
     // 保存商品方法（保持大部分不变）
@@ -225,7 +338,10 @@ export default {
       const productData = {
         name: this.productForm.name,
         description: this.productForm.description,
-        imageUrl: this.productForm.imageUrl,
+        imageUrls: this.productForm.imageUrls.join(','),
+        categoryLevel1: this.productForm.categoryLevel1,
+        categoryLevel2: this.productForm.categoryLevel2,
+        stockQuantity: parseInt(this.productForm.stockQuantity),
         price: parseFloat(this.productForm.price)
       }
       
@@ -284,27 +400,26 @@ export default {
               product.status === 'UNPUBLISHED' ? '已下架' : '未知状态';
             
             // 修复图片显示问题 - 处理图片URL
-            if (product.imageUrl) {
-              // 如果已经是完整URL，保持不变
-              if (product.imageUrl.startsWith('http')) {
-                // 已经是完整URL，无需修改
-              } 
-              // 添加对file://格式URL的处理
-              else if (product.imageUrl.startsWith('file://')) {
-                // 提取文件名
-                const fileName = product.imageUrl.split('\\').pop().split('/').pop();
-                // 构建正确的http URL
-                product.imageUrl = 'http://localhost:8080/picture/' + fileName;
-              }
-              // 如果是相对路径，检查是否以/uploads/开头
-              else if (product.imageUrl.startsWith('/uploads/')) {
-                // 添加正确的基础路径前缀
-                product.imageUrl = 'http://localhost:8080' + product.imageUrl;
-              }
-              // 否则，假设是项目根目录下的picture目录中的图片
-              else {
-                // 直接使用项目中的picture目录
-                product.imageUrl = 'http://localhost:8080/picture/' + product.imageUrl;
+            if (product.imageUrls) {
+              // 处理多图片URL，取第一张作为预览图
+              const imageUrls = product.imageUrls.split(',');
+              product.imageUrl = imageUrls[0];
+              
+              // 处理URL格式
+              if (product.imageUrl) {
+                if (product.imageUrl.startsWith('http')) {
+                  // 已经是完整URL，无需修改
+                } 
+                else if (product.imageUrl.startsWith('file://')) {
+                  const fileName = product.imageUrl.split('\\').pop().split('/').pop();
+                  product.imageUrl = 'http://localhost:8080/picture/' + fileName;
+                }
+                else if (product.imageUrl.startsWith('/uploads/')) {
+                  product.imageUrl = 'http://localhost:8080' + product.imageUrl;
+                }
+                else {
+                  product.imageUrl = 'http://localhost:8080/picture/' + product.imageUrl;
+                }
               }
             }
             
@@ -321,8 +436,15 @@ export default {
       this.productForm = {
         name: product.name,
         description: product.description,
-        imageUrl: product.imageUrl,
+        imageUrls: product.imageUrls ? product.imageUrls.split(',') : [],
+        categoryLevel1: product.categoryLevel1 || '',
+        categoryLevel2: product.categoryLevel2 || '',
+        stockQuantity: product.stockQuantity || 0,
         price: product.price.toString()
+      }
+      // 更新二级分类选项
+      if (product.categoryLevel1) {
+        this.categoryLevel2Options = this.categoryMap[product.categoryLevel1] || [];
       }
       this.showAddDialog = true
     },
@@ -332,9 +454,14 @@ export default {
       this.productForm = {
         name: '',
         description: '',
-        imageUrl: '',
+        imageUrls: [],
+        categoryLevel1: '',
+        categoryLevel2: '',
+        stockQuantity: 0,
         price: ''
       }
+      this.selectedFiles = []
+      this.categoryLevel2Options = []
       this.$refs.productForm.reset()
     },
     toggleProductStatus(product) {

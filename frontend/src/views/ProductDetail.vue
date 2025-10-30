@@ -4,11 +4,33 @@
       <v-layout align-center justify-center>
         <v-flex xs12 sm8 md6>
           <v-card v-if="product">
-            <v-img
-              :src="product.imageUrl || 'https://via.placeholder.com/800x450?text=暂无图片'"
-              aspect-ratio="16/9"
-              class="grey lighten-2"
-            ></v-img>
+            <!-- 多图片显示组件 -->
+            <v-container class="mb-4">
+              <v-layout row>
+                <v-flex xs2>
+                  <!-- 缩略图列表 -->
+                  <v-layout column>
+                    <v-avatar
+                      v-for="(img, index) in product.imageUrls"
+                      :key="index"
+                      :src="img"
+                      size="80"
+                      class="mb-2 cursor-pointer"
+                      :class="{ 'border-2 border-primary': currentImageIndex === index }"
+                      @click="currentImageIndex = index"
+                    ></v-avatar>
+                  </v-layout>
+                </v-flex>
+                <v-flex xs10>
+                  <!-- 主图显示 -->
+                  <v-img
+                    :src="product.imageUrls[currentImageIndex] || 'https://via.placeholder.com/800x450?text=暂无图片'"
+                    aspect-ratio="16/9"
+                    class="grey lighten-2"
+                  ></v-img>
+                </v-flex>
+              </v-layout>
+            </v-container>
             <v-card-title>{{ product.name }}</v-card-title>
             <v-card-subtitle>价格: ¥{{ product.price.toFixed(2) }}</v-card-subtitle>
             <v-card-text>{{ product.description }}</v-card-text>
@@ -59,7 +81,8 @@ export default {
   },
   data() {
     return {
-      product: null
+      product: null,
+      currentImageIndex: 0
     }
   },
   mounted() {
@@ -74,8 +97,11 @@ export default {
           this.product = {
             ...productData,
             available: productData.status === 'AVAILABLE',
-            frozen: productData.status === 'FROZEN'
+            frozen: productData.status === 'FROZEN',
+            // 处理多图片，转换为数组
+            imageUrls: productData.imageUrls ? productData.imageUrls.split(',') : ['']
           }
+          this.currentImageIndex = 0
         })
         .catch(error => {
           console.error('获取商品详情失败:', error)

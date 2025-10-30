@@ -28,7 +28,19 @@ public class ProductController {
 
     // 获取所有可购买的商品（供买家查看）
     @GetMapping
-    public ResponseEntity<List<Product>> getAllAvailableProducts() {
+    public ResponseEntity<List<Product>> getAllProducts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String categoryLevel1,
+            @RequestParam(required = false) String categoryLevel2) {
+        
+        // 如果提供了搜索参数，则使用搜索功能
+        if (keyword != null || categoryLevel1 != null || categoryLevel2 != null) {
+            // 使用搜索功能查找商品
+            List<Product> searchResults = productService.searchProducts(keyword, categoryLevel1, categoryLevel2);
+            return ResponseEntity.ok(searchResults);
+        }
+        
+        // 否则返回所有可用商品
         List<Product> products = productService.getAllAvailableProducts();
         return ResponseEntity.ok(products);
     }
@@ -53,8 +65,37 @@ public class ProductController {
         try {
             Seller seller = sellerService.getSellerByUsername(username);
             product.setSeller(seller);
+            
+            // 如果未设置状态，默认为已发布
+            if (product.getStatus() == null) {
+                product.setStatus(Product.ProductStatus.AVAILABLE);
+            }
+            
             Product savedProduct = productService.saveProduct(product);
             return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+    
+    @PostMapping("/batch")
+    public ResponseEntity<List<Product>> createProducts(@RequestBody List<Product> products) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        try {
+            Seller seller = sellerService.getSellerByUsername(username);
+            
+            // 设置所有商品的卖家信息和默认状态
+            for (Product product : products) {
+                product.setSeller(seller);
+                if (product.getStatus() == null) {
+                    product.setStatus(Product.ProductStatus.AVAILABLE);
+                }
+            }
+            
+            List<Product> savedProducts = productService.batchSaveProducts(products);
+            return new ResponseEntity<>(savedProducts, HttpStatus.CREATED);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
