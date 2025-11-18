@@ -15,6 +15,11 @@ public class PurchaseIntent {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
     
+    // 添加客户关联
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+    
     // 买家联系方式
     private String buyerName;
     private String buyerPhone;
@@ -107,5 +112,13 @@ public class PurchaseIntent {
     
     public void setCompleteTime(LocalDateTime completeTime) {
         this.completeTime = completeTime;
+    }
+    
+    public Customer getCustomer() {
+        return customer;
+    }
+    
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
 }

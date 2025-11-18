@@ -21,7 +21,7 @@ import java.util.List;
 
 // 假设第22行左右有@RequestMapping
 @RestController
-@RequestMapping("/purchase-intents") // 移除/api前缀
+@RequestMapping("/api/purchase-intents") // 添加/api前缀
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class PurchaseIntentController {
 

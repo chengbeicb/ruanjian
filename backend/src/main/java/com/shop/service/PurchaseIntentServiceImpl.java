@@ -46,6 +46,11 @@ public class PurchaseIntentServiceImpl implements PurchaseIntentService {
     }
 
     @Override
+    public List<PurchaseIntent> getPurchaseIntentsByCustomerId(Long customerId) {
+        return purchaseIntentRepository.findByCustomerId(customerId);
+    }
+
+    @Override
     public PurchaseIntent getPurchaseIntentById(Long id) {
         return purchaseIntentRepository.findById(id)
                 .orElseThrow(() -> new PurchaseIntentNotFoundException("购买意向不存在，ID: " + id));

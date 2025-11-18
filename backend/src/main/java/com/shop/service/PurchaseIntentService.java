@@ -11,4 +11,5 @@ public interface PurchaseIntentService {
     PurchaseIntent getActivePurchaseIntentByProductId(Long productId);
     PurchaseIntent completePurchaseIntent(Long id);
     PurchaseIntent cancelPurchaseIntent(Long id);
+    List<PurchaseIntent> getPurchaseIntentsByCustomerId(Long customerId);
 }

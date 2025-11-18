@@ -166,7 +166,7 @@ export default {
     },
     completePurchase(id) {
       if (confirm('确认完成此交易吗？完成后商品将下架。')) {
-        this.$http.put(`/purchase-intents/${id}/complete`)
+        this.$http.put(`/api/purchase-intents/${id}/complete`)
           .then(response => {
             this.fetchPurchaseIntents()
             // 修改为使用showSnackbar方法

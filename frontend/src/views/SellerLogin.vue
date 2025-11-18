@@ -53,28 +53,21 @@ export default {
     }
   },
   methods: {
-    login() {
+    async login() {
       if (this.$refs.loginForm.validate()) {
         this.loading = true
         this.error = ''
-        
-        // 使用后端专门的登录接口
-        this.$http.post('/seller/login', {
-          username: this.form.username,
-          password: this.form.password
-        })
-          .then(response => {
-            // 验证成功，存储用户名密码并跳转
-            const auth = btoa(`${this.form.username}:${this.form.password}`)
-            localStorage.setItem('auth', auth)
-            this.loading = false
-            this.$router.push('/seller/dashboard')  // 立即跳转
-          })
-          .catch(error => {
-            console.error('登录失败:', error)
-            this.loading = false
-            this.error = error.response?.data || '登录失败，请检查用户名和密码'
-          })
+        try {
+          // 使用在 main.js 中定义的全局登录方法
+          await this.$loginSeller(this.form.username, this.form.password)
+          // 成功后的跳转已在 $loginSeller 方法中处理
+        } catch (error) {
+          console.error('登录失败:', error)
+          // 显示更友好的错误信息
+          this.error = '登录失败，请检查用户名和密码或联系管理员。'
+        } finally {
+          this.loading = false
+        }
       }
     }
   }

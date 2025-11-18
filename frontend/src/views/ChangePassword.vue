@@ -81,7 +81,7 @@ export default {
         this.error = ''
         this.success = ''
         
-        this.$http.put('/seller/password', {
+        this.$http.put('/api//seller/password', {
           oldPassword: this.form.oldPassword,
           newPassword: this.form.newPassword
         })

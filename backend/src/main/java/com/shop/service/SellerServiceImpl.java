@@ -28,8 +28,7 @@ public class SellerServiceImpl implements SellerService {
             throw new AuthenticationException("用户名已存在");
         }
         
-        // 加密密码
-        seller.setPassword(passwordEncoder.encode(seller.getPassword()));
+        // 保留原始密码，不再加密
         seller.setActive(true);
         seller.setCreateTime(LocalDateTime.now());
         seller.setUpdateTime(LocalDateTime.now());
@@ -69,13 +68,13 @@ public class SellerServiceImpl implements SellerService {
     public boolean updatePassword(Long sellerId, String oldPassword, String newPassword) {
         Seller seller = getSellerById(sellerId);
         
-        // 验证旧密码
-        if (!passwordEncoder.matches(oldPassword, seller.getPassword())) {
+        // 直接比较旧密码
+        if (!oldPassword.equals(seller.getPassword())) {
             throw new AuthenticationException("当前密码不正确");
         }
         
-        // 加密新密码并更新
-        seller.setPassword(passwordEncoder.encode(newPassword));
+        // 直接保存原始新密码
+        seller.setPassword(newPassword);
         seller.setUpdateTime(LocalDateTime.now());
         sellerRepository.save(seller);
         
@@ -92,7 +91,8 @@ public class SellerServiceImpl implements SellerService {
             throw new AuthenticationException("账号未激活，请联系管理员");
         }
         
-        return passwordEncoder.matches(password, seller.getPassword());
+        // 直接比较密码
+        return password.equals(seller.getPassword());
     }
     
     @Override

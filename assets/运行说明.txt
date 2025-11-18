@@ -10,8 +10,10 @@
 3. 访问地址：
    http://localhost:8080
 
-4. 如果端口冲突，使用：
-   java -jar rjgcsj-backend-1.0.0.jar --server.port=8081
+4. 端口占用说明：
+   默认端口 8080。如需变更，可加参数：
+   java -jar rjgcsj-backend-1.0.0.jar --server.port=9090
+   前端被打包并放入后端后，无需单独端口；若前端独立开发（npm run serve），建议使用 8082 并设置环境变量 VUE_APP_API_BASE_URL 指向后端。
 
 5. 停止应用：
    按 Ctrl+C

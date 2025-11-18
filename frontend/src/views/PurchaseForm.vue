@@ -99,20 +99,45 @@ export default {
   methods: {
     submitPurchase() {
       if (this.$refs.purchaseForm.validate()) {
-        this.loading = true
-        this.$http.post('/purchase-intents', this.form)
-          .then(response => {
-            this.loading = false
-            // 修改为使用showSnackbar方法
-            this.showSnackbar('购买意向已提交，请等待卖家联系', 'success')
-            this.$router.push('/')
+        this.loading = true;
+        // 从 localStorage 获取 customerId
+        const customerId = localStorage.getItem('customerId');
+        if (!customerId) {
+          this.$snackbar.open({ message: '请先登录', type: 'error' });
+          this.loading = false;
+          this.$router.push({ name: 'customer-login' });
+          return;
+        }
+
+        if (window.confirm('您确定要提交购买意向吗？')) {
+          this.$http.post('/api/purchase-intents', {
+            productId: this.id,
+            customerId: customerId,
+            // 包含表单中的其他信息
+            buyerName: this.form.buyerName,
+            buyerPhone: this.form.buyerPhone,
+            buyerEmail: this.form.buyerEmail,
+            buyerAddress: this.form.buyerAddress
           })
-          .catch(error => {
-            this.loading = false
-            console.error('提交购买意向失败:', error)
-            // 修改为使用showSnackbar方法
-            this.showSnackbar(error.response?.data || '提交购买意向失败', 'error')
-          })
+            .then(() => {
+              this.loading = false;
+              this.$snackbar.open({
+                message: '购买意向已提交，请等待卖家确认',
+                type: 'success'
+              });
+              this.$router.push({ name: 'home' });
+            })
+            .catch(error => {
+              this.loading = false;
+              console.error('购买失败:', error);
+              this.$snackbar.open({
+                message: `购买失败: ${error.response?.data?.message || error.message}`,
+                type: 'error'
+              });
+            });
+        } else {
+          this.loading = false;
+        }
       }
     },
     goBack() {

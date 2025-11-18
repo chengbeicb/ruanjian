@@ -4,11 +4,33 @@
       <v-layout align-center justify-center>
         <v-flex xs12 sm8 md6>
           <v-card v-if="product">
-            <v-img
-              :src="product.imageUrl || 'https://via.placeholder.com/800x450?text=暂无图片'"
-              aspect-ratio="16/9"
-              class="grey lighten-2"
-            ></v-img>
+            <!-- 多图片显示组件 -->
+            <v-container class="mb-4">
+              <v-layout row>
+                <v-flex xs2>
+                  <!-- 缩略图列表 -->
+                  <v-layout column>
+                    <v-avatar
+                      v-for="(img, index) in product.imageUrls"
+                      :key="index"
+                      :src="img"
+                      size="80"
+                      class="mb-2 cursor-pointer"
+                      :class="{ 'border-2 border-primary': currentImageIndex === index }"
+                      @click="currentImageIndex = index"
+                    ></v-avatar>
+                  </v-layout>
+                </v-flex>
+                <v-flex xs10>
+                  <!-- 主图显示 -->
+                  <v-img
+                    :src="product.imageUrls[currentImageIndex] || 'https://via.placeholder.com/800x450?text=暂无图片'"
+                    aspect-ratio="16/9"
+                    class="grey lighten-2"
+                  ></v-img>
+                </v-flex>
+              </v-layout>
+            </v-container>
             <v-card-title>{{ product.name }}</v-card-title>
             <v-card-subtitle>价格: ¥{{ product.price.toFixed(2) }}</v-card-subtitle>
             <v-card-text>{{ product.description }}</v-card-text>
@@ -59,7 +81,8 @@ export default {
   },
   data() {
     return {
-      product: null
+      product: null,
+      currentImageIndex: 0
     }
   },
   mounted() {
@@ -67,26 +90,39 @@ export default {
   },
   methods: {
     fetchProduct() {
-      this.$http.get(`/products/${this.id}`)
+      this.$http.get(`/api/products/${this.id}`)
         .then(response => {
-          // 添加数据转换逻辑
-          const productData = response.data
+          const productData = response.data;
           this.product = {
             ...productData,
             available: productData.status === 'AVAILABLE',
-            frozen: productData.status === 'FROZEN'
+            frozen: productData.status === 'FROZEN',
+            imageUrls: (productData.imageUrls ? productData.imageUrls.split(',') : ['']).map(url => {
+              if (url && url.startsWith('file:///')) {
+                const filename = url.split(/[\/]/).pop();
+                return `http://localhost:8080/images/${filename}`;
+              }
+              return url || 'https://via.placeholder.com/800x450?text=暂无图片';
+            })
+          };
+          if (!this.product.imageUrls[0]) {
+             this.product.imageUrls[0] = 'https://via.placeholder.com/800x450?text=暂无图片';
           }
+          this.currentImageIndex = 0;
         })
         .catch(error => {
-          console.error('获取商品详情失败:', error)
+          console.error('获取商品详情失败:', error);
           this.$snackbar.open({
             message: '获取商品详情失败',
             type: 'error'
-          })
-        })
+          });
+        });
     },
     goToPurchase() {
-      this.$router.push({ name: 'purchase-form', params: { id: this.id } })
+      // 使用浏览器内置的确认框，确认后才跳转到购买表单
+      if (window.confirm('您确定要购买此商品吗？')) {
+        this.$router.push({ name: 'purchase-form', params: { id: this.id } });
+      }
     },
     goBack() {
       this.$router.go(-1)

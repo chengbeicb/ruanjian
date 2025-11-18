@@ -1,11 +1,8 @@
-# 启动服务
-docker-compose start
+# 启动后端服务
+Write-Host "启动后端服务..."
+Start-Process java -ArgumentList "-jar", "$PSScriptRoot\..\assets\rjgcsj-backend-1.0.0.jar" -WorkingDirectory "$PSScriptRoot\.."
+Write-Host "后端服务已启动，端口8080"
 
-# 停止服务  
-docker-compose stop
-
-# 重启服务
-docker-compose restart
-
-# 查看日志
-docker-compose logs -f
+# 启动前端开发服务器（可选）
+# cd $PSScriptRoot\..\frontend
+# npm run serve

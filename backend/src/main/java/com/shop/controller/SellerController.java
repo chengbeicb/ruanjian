@@ -19,7 +19,7 @@ import java.util.Map;
 
 // 修改第21行的@RequestMapping
 @RestController
-@RequestMapping("/seller") // 移除/api前缀
+@RequestMapping("/api/seller") // 移除/api前缀
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class SellerController {
 
@@ -33,8 +33,11 @@ public class SellerController {
             String username = credentials.get("username");
             String password = credentials.get("password");
             
-            // 验证凭证
-            sellerService.authenticate(username, password);
+            // 验证凭证 - 确保检查返回值
+            boolean isAuthenticated = sellerService.authenticate(username, password);
+            if (!isAuthenticated) {
+                throw new AuthenticationException("用户名或密码错误");
+            }
             
             // 创建认证对象并设置到安全上下文
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
