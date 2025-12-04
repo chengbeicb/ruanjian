@@ -23,13 +23,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
     
-    // 处理购买意向不存在异常
-    @ExceptionHandler(PurchaseIntentNotFoundException.class)
-    public ResponseEntity<?> handlePurchaseIntentNotFoundException(PurchaseIntentNotFoundException ex, WebRequest request) {
-        ErrorDetails errorDetails = new ErrorDetails(HttpStatus.NOT_FOUND.value(), ex.getMessage(), request.getDescription(false));
-        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
-    }
-    
     // 处理商品状态异常（如商品已售出或已冻结）
     @ExceptionHandler(ProductStatusException.class)
     public ResponseEntity<?> handleProductStatusException(ProductStatusException ex, WebRequest request) {

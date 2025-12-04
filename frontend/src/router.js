@@ -2,7 +2,6 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
 import ProductDetail from './views/ProductDetail.vue'
-import PurchaseForm from './views/PurchaseForm.vue'
 import SellerLogin from './views/SellerLogin.vue'
 import SellerDashboard from './views/SellerDashboard.vue'
 import ProductManagement from './views/ProductManagement.vue'
@@ -52,7 +51,6 @@ export default new Router({
       component: ProductDetail,
       props: true
     },
-    {      path: '/product/:id/purchase',      name: 'purchase-form',      component: PurchaseForm,      props: true,      beforeEnter: requireCustomerAuth    },
     // 卖家相关路由
     {
       path: '/seller/login',

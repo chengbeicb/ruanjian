@@ -93,11 +93,15 @@ export default {
         })
       
       // 获取订单统计
+<<<<<<< HEAD
       this.$http.get('/purchase-intents')
+=======
+      this.$http.get('/api/seller/orders')
+>>>>>>> 4d4a2ff (升级需求B的后端开发，包含开发日志)
         .then(response => {
-          const intents = response.data
-          this.pendingOrderCount = intents.filter(intent => !intent.completed && !intent.canceled).length
-          this.completedOrderCount = intents.filter(intent => intent.completed).length
+          const orders = response.data
+          this.pendingOrderCount = orders.filter(order => order.status === 'PENDING' || order.status === 'CONFIRMED' || order.status === 'PREPARING' || order.status === 'SHIPPING').length
+          this.completedOrderCount = orders.filter(order => order.status === 'COMPLETED').length
         })
         .catch(error => {
           console.error('获取订单统计失败:', error)

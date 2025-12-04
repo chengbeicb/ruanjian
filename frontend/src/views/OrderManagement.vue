@@ -10,52 +10,98 @@
         </v-toolbar-items>
       </v-toolbar>
       
+      <!-- 订单筛选标签 -->
+      <v-tabs v-model="activeTab" class="mt-4">
+        <v-tab>全部订单</v-tab>
+        <v-tab>待确认</v-tab>
+        <v-tab>待备货</v-tab>
+        <v-tab>待发货</v-tab>
+        <v-tab>已发货</v-tab>
+        <v-tab>已完成</v-tab>
+        <v-tab>已取消</v-tab>
+      </v-tabs>
+      
       <v-layout mt-6>
         <v-flex xs12>
           <v-card>
             <v-card-title>
-              <h3>购买意向列表</h3>
+              <h3>订单列表</h3>
             </v-card-title>
             <v-card-text>
-              <v-container v-if="purchaseIntents.length > 0">
+              <v-container v-if="filteredOrders.length > 0">
                 <v-data-table
                   :headers="headers"
-                  :items="purchaseIntents"
+                  :items="filteredOrders"
                   class="elevation-1"
                   item-key="id"
                 >
                   <template v-slot:item.status="{ item }">
-                    <v-chip :color="getStatusColor(item)" text-color="white">
-                      {{ getStatusText(item) }}
+                    <v-chip :color="getStatusColor(item.status)" text-color="white">
+                      {{ getStatusText(item.status) }}
                     </v-chip>
+                  </template>
+                  <template v-slot:item.totalAmount="{ item }">
+                    ¥{{ item.totalAmount.toFixed(2) }}
                   </template>
                   <template v-slot:item.actions="{ item }">
                     <v-btn
-                      v-if="!item.completed && !item.canceled"
+                      v-if="item.status === 'PENDING'"
                       color="success"
-                      @click="completePurchase(item.id)"
+                      small
+                      @click="confirmOrder(item.id)"
+                      class="mr-2"
+                    >
+                      确认订单
+                    </v-btn>
+                    <v-btn
+                      v-if="item.status === 'CONFIRMED'"
+                      color="info"
+                      small
+                      @click="prepareOrder(item.id)"
+                      class="mr-2"
+                    >
+                      备货完成
+                    </v-btn>
+                    <v-btn
+                      v-if="item.status === 'PREPARING'"
+                      color="primary"
+                      small
+                      @click="shipOrder(item.id)"
+                      class="mr-2"
+                    >
+                      开始发货
+                    </v-btn>
+                    <v-btn
+                      v-if="item.status === 'SHIPPING'"
+                      color="success"
+                      small
+                      @click="completeOrder(item.id)"
+                      class="mr-2"
                     >
                       完成交易
                     </v-btn>
                     <v-btn
-                      v-if="!item.completed && !item.canceled"
+                      v-if="item.status !== 'COMPLETED' && item.status !== 'CANCELLED'"
                       color="error"
-                      @click="cancelPurchase(item.id)"
+                      small
+                      @click="showCancelDialog(item)"
+                      class="mr-2"
                     >
-                      取消交易
+                      取消订单
                     </v-btn>
                     <v-btn
-                      @click="showBuyerInfo(item)"
                       color="primary"
+                      small
+                      @click="showOrderDetail(item)"
                     >
-                      查看买家信息
+                      查看详情
                     </v-btn>
                   </template>
                 </v-data-table>
               </v-container>
               <v-container v-else>
                 <v-alert type="info" dismissible>
-                  暂无购买意向
+                  暂无订单
                 </v-alert>
               </v-container>
             </v-card-text>
@@ -63,55 +109,123 @@
         </v-flex>
       </v-layout>
       
-      <!-- 买家信息对话框 -->
-      <v-dialog v-model="showBuyerInfoDialog" max-width="500px">
-        <v-card v-if="selectedIntent">
-          <v-card-title>买家信息</v-card-title>
+      <!-- 订单详情对话框 -->
+      <v-dialog v-model="showOrderDialog" max-width="700px">
+        <v-card v-if="selectedOrder">
+          <v-card-title>订单详情</v-card-title>
           <v-card-text>
             <v-list>
               <v-list-item>
                 <v-list-item-content>
-                  <v-list-item-title>商品名称</v-list-item-title>
-                  <v-list-item-subtitle>{{ selectedIntent.product.name }}</v-list-item-subtitle>
+                  <v-list-item-title>订单编号</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedOrder.orderNumber }}</v-list-item-subtitle>
                 </v-list-item-content>
               </v-list-item>
               <v-list-item>
                 <v-list-item-content>
-                  <v-list-item-title>买家姓名</v-list-item-title>
-                  <v-list-item-subtitle>{{ selectedIntent.buyerName }}</v-list-item-subtitle>
+                  <v-list-item-title>订单状态</v-list-item-title>
+                  <v-list-item-subtitle>
+                    <v-chip :color="getStatusColor(selectedOrder.status)" small text-color="white">
+                      {{ getStatusText(selectedOrder.status) }}
+                    </v-chip>
+                  </v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>收货人</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedOrder.receiverName }}</v-list-item-subtitle>
                 </v-list-item-content>
               </v-list-item>
               <v-list-item>
                 <v-list-item-content>
                   <v-list-item-title>联系电话</v-list-item-title>
-                  <v-list-item-subtitle>{{ selectedIntent.buyerPhone }}</v-list-item-subtitle>
+                  <v-list-item-subtitle>{{ selectedOrder.receiverPhone }}</v-list-item-subtitle>
                 </v-list-item-content>
               </v-list-item>
               <v-list-item>
                 <v-list-item-content>
-                  <v-list-item-title>电子邮箱</v-list-item-title>
-                  <v-list-item-subtitle>{{ selectedIntent.buyerEmail }}</v-list-item-subtitle>
+                  <v-list-item-title>收货地址</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedOrder.shippingAddress }}</v-list-item-subtitle>
                 </v-list-item-content>
               </v-list-item>
               <v-list-item>
                 <v-list-item-content>
-                  <v-list-item-title>联系地址</v-list-item-title>
-                  <v-list-item-subtitle>{{ selectedIntent.buyerAddress }}</v-list-item-subtitle>
+                  <v-list-item-title>订单备注</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedOrder.remark || '无' }}</v-list-item-subtitle>
                 </v-list-item-content>
               </v-list-item>
               <v-list-item>
                 <v-list-item-content>
-                  <v-list-item-title>提交时间</v-list-item-title>
-                  <v-list-item-subtitle>{{ formatDate(selectedIntent.createTime) }}</v-list-item-subtitle>
+                  <v-list-item-title>下单时间</v-list-item-title>
+                  <v-list-item-subtitle>{{ formatDate(selectedOrder.createTime) }}</v-list-item-subtitle>
                 </v-list-item-content>
               </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>订单总额</v-list-item-title>
+                  <v-list-item-subtitle class="red--text text--darken-2">¥{{ selectedOrder.totalAmount.toFixed(2) }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <v-divider class="my-3"></v-divider>
+              <v-subheader>商品明细</v-subheader>
+              <v-list-item v-for="item in selectedOrder.orderItems" :key="item.id">
+                <v-list-item-content>
+                  <v-list-item-title>{{ item.product.name }}</v-list-item-title>
+                  <v-list-item-subtitle>
+                    数量: {{ item.quantity }} × ¥{{ item.unitPrice.toFixed(2) }} = ¥{{ item.subtotal.toFixed(2) }}
+                  </v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <div v-if="selectedOrder.status === 'CANCELLED'" class="mt-3">
+                <v-divider></v-divider>
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-list-item-title class="error--text">取消信息</v-list-item-title>
+                    <v-list-item-subtitle>取消人: {{ selectedOrder.cancelRole === 'CUSTOMER' ? '客户' : '商家' }}</v-list-item-subtitle>
+                    <v-list-item-subtitle>取消原因: {{ selectedOrder.cancelReason }}</v-list-item-subtitle>
+                    <v-list-item-subtitle>取消时间: {{ formatDate(selectedOrder.cancelTime) }}</v-list-item-subtitle>
+                  </v-list-item-content>
+                </v-list-item>
+              </div>
             </v-list>
           </v-card-text>
           <v-card-actions>
-            <v-btn color="primary" @click="showBuyerInfoDialog = false">关闭</v-btn>
+            <v-btn color="primary" @click="showOrderDialog = false">关闭</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
+      
+      <!-- 取消订单对话框 -->
+      <v-dialog v-model="showCancelOrderDialog" max-width="400px">
+        <v-card>
+          <v-card-title>取消订单</v-card-title>
+          <v-card-text>
+            <v-text-field
+              v-model="cancelReason"
+              label="取消原因"
+              required
+              :rules="[v => !!v || '请输入取消原因']"
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" @click="showCancelOrderDialog = false">取消</v-btn>
+            <v-btn color="error" @click="cancelOrder">确认取消</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+      
+      <!-- 消息提示 -->
+      <v-snackbar
+        v-model="snackbar.show"
+        :color="snackbar.type === 'error' ? 'error' : 'success'"
+        timeout="3000"
+        top
+      >
+        {{ snackbar.message }}
+        <v-btn color="white" text @click="snackbar.show = false">关闭</v-btn>
+      </v-snackbar>
     </v-container>
   </div>
 </template>
@@ -119,21 +233,22 @@
 <script>
 export default {
   name: 'OrderManagement',
-  // 在data()中添加snackbar配置
   data() {
     return {
-      purchaseIntents: [],
-      showBuyerInfoDialog: false,
-      selectedIntent: null,
+      orders: [],
+      activeTab: 0,
+      showOrderDialog: false,
+      showCancelOrderDialog: false,
+      selectedOrder: null,
+      cancelReason: '',
       headers: [
-        { text: 'ID', value: 'id' },
-        { text: '商品名称', value: 'product.name' },
-        { text: '买家姓名', value: 'buyerName' },
-        { text: '提交时间', value: 'createTime', sortable: false },
+        { text: '订单编号', value: 'orderNumber' },
+        { text: '客户', value: 'customer.username' },
+        { text: '订单金额', value: 'totalAmount' },
+        { text: '下单时间', value: 'createTime' },
         { text: '状态', value: 'status', sortable: false },
         { text: '操作', value: 'actions', sortable: false }
       ],
-      // 添加snackbar配置
       snackbar: {
         show: false,
         message: '',
@@ -141,44 +256,54 @@ export default {
       }
     }
   },
-  mounted() {
-    this.fetchPurchaseIntents()
+  computed: {
+    filteredOrders() {
+      const statusMap = ['', 'PENDING', 'CONFIRMED', 'PREPARING', 'SHIPPING', 'COMPLETED', 'CANCELLED']
+      const filterStatus = statusMap[this.activeTab]
+      if (!filterStatus) return this.orders
+      return this.orders.filter(order => order.status === filterStatus)
+    }
   },
-  // 在methods中添加showSnackbar方法
+  mounted() {
+    this.fetchOrders()
+  },
   methods: {
-    // 添加showSnackbar方法
     showSnackbar(message, type = 'success') {
       this.snackbar.message = message
       this.snackbar.type = type
       this.snackbar.show = true
     },
     
+<<<<<<< HEAD
     fetchPurchaseIntents() {
       this.$http.get('/purchase-intents')
+=======
+    fetchOrders() {
+      this.$http.get('/api/seller/orders')
+>>>>>>> 4d4a2ff (升级需求B的后端开发，包含开发日志)
         .then(response => {
-          this.purchaseIntents = response.data
+          this.orders = response.data
         })
         .catch(error => {
-          console.error('获取购买意向列表失败:', error)
-          // 修改为使用showSnackbar方法
-          this.showSnackbar('获取购买意向列表失败', 'error')
+          console.error('获取订单列表失败:', error)
+          this.showSnackbar('获取订单列表失败', 'error')
         })
     },
-    completePurchase(id) {
-      if (confirm('确认完成此交易吗？完成后商品将下架。')) {
-        this.$http.put(`/api/purchase-intents/${id}/complete`)
-          .then(response => {
-            this.fetchPurchaseIntents()
-            // 修改为使用showSnackbar方法
-            this.showSnackbar('交易已完成')
+    
+    confirmOrder(id) {
+      if (confirm('确认接受此订单吗？')) {
+        this.$http.put(`/api/seller/orders/${id}/confirm`)
+          .then(() => {
+            this.fetchOrders()
+            this.showSnackbar('订单已确认')
           })
           .catch(error => {
-            console.error('完成交易失败:', error)
-            // 修改为使用showSnackbar方法
-            this.showSnackbar('完成交易失败', 'error')
+            console.error('确认订单失败:', error)
+            this.showSnackbar('确认订单失败', 'error')
           })
       }
     },
+<<<<<<< HEAD
     cancelPurchase(id) {
       if (confirm('确认取消此交易吗？取消后商品将解冻。')) {
         this.$http.put(`/purchase-intents/${id}/cancel`)
@@ -186,28 +311,104 @@ export default {
             this.fetchPurchaseIntents()
             // 修改为使用showSnackbar方法
             this.showSnackbar('交易已取消')
+=======
+    
+    prepareOrder(id) {
+      if (confirm('确认已备货完成吗？')) {
+        this.$http.put(`/api/seller/orders/${id}/prepare`)
+          .then(() => {
+            this.fetchOrders()
+            this.showSnackbar('备货完成')
+>>>>>>> 4d4a2ff (升级需求B的后端开发，包含开发日志)
           })
           .catch(error => {
-            console.error('取消交易失败:', error)
-            // 修改为使用showSnackbar方法
-            this.showSnackbar('取消交易失败', 'error')
+            console.error('更新订单失败:', error)
+            this.showSnackbar('更新订单失败', 'error')
           })
       }
     },
-    showBuyerInfo(intent) {
-      this.selectedIntent = intent
-      this.showBuyerInfoDialog = true
+    
+    shipOrder(id) {
+      if (confirm('确认已开始发货吗？')) {
+        this.$http.put(`/api/seller/orders/${id}/ship`)
+          .then(() => {
+            this.fetchOrders()
+            this.showSnackbar('订单已发货')
+          })
+          .catch(error => {
+            console.error('更新订单失败:', error)
+            this.showSnackbar('更新订单失败', 'error')
+          })
+      }
     },
-    getStatusColor(item) {
-      if (item.completed) return 'success'
-      if (item.canceled) return 'error'
-      return 'warning'
+    
+    completeOrder(id) {
+      if (confirm('确认完成此订单吗？')) {
+        this.$http.put(`/api/seller/orders/${id}/complete`)
+          .then(() => {
+            this.fetchOrders()
+            this.showSnackbar('订单已完成')
+          })
+          .catch(error => {
+            console.error('完成订单失败:', error)
+            this.showSnackbar('完成订单失败', 'error')
+          })
+      }
     },
-    getStatusText(item) {
-      if (item.completed) return '已完成'
-      if (item.canceled) return '已取消'
-      return '处理中'
+    
+    showCancelDialog(order) {
+      this.selectedOrder = order
+      this.cancelReason = ''
+      this.showCancelOrderDialog = true
     },
+    
+    cancelOrder() {
+      if (!this.cancelReason.trim()) {
+        this.showSnackbar('请输入取消原因', 'error')
+        return
+      }
+      
+      this.$http.put(`/api/seller/orders/${this.selectedOrder.id}/cancel?reason=${encodeURIComponent(this.cancelReason)}`)
+        .then(() => {
+          this.fetchOrders()
+          this.showCancelOrderDialog = false
+          this.showSnackbar('订单已取消')
+        })
+        .catch(error => {
+          console.error('取消订单失败:', error)
+          this.showSnackbar(error.response?.data || '取消订单失败', 'error')
+        })
+    },
+    
+    showOrderDetail(order) {
+      this.selectedOrder = order
+      this.showOrderDialog = true
+    },
+    
+    getStatusColor(status) {
+      const colors = {
+        'PENDING': 'orange',
+        'CONFIRMED': 'blue',
+        'PREPARING': 'cyan',
+        'SHIPPING': 'purple',
+        'COMPLETED': 'green',
+        'CANCELLED': 'red'
+      }
+      return colors[status] || 'grey'
+    },
+    
+    getStatusText(status) {
+      const texts = {
+        'PENDING': '待确认',
+        'CONFIRMED': '已确认',
+        'PREPARING': '备货中',
+        'SHIPPING': '已发货',
+        'COMPLETED': '已完成',
+        'CANCELLED': '已取消'
+      }
+      return texts[status] || status
+    },
+    
     formatDate(dateString) {
       if (!dateString) return ''
       const date = new Date(dateString)
@@ -229,15 +430,3 @@ export default {
   padding: 20px 0;
 }
 </style>
-
-// 在模板中添加v-snackbar组件
-// 在v-container标签后添加：
-<v-snackbar
-  v-model="snackbar.show"
-  :color="snackbar.type === 'error' ? 'error' : 'success'"
-  timeout="3000"
-  top
->
-  {{ snackbar.message }}
-  <v-btn color="accent" text @click="snackbar.show = false">关闭</v-btn>
-</v-snackbar>

@@ -49,13 +49,7 @@ export VUE_APP_API_BASE_URL=http://localhost:8080
 ### 4. 使用已构建的前端
 后端启动后，可直接通过 http://localhost:8080 访问应用（后端已包含打包后的静态前端文件）。
 
-## 脚本说明
 
-### scripts\scriptsmanage.ps1
-- 用于启动后端服务的PowerShell脚本
-
-### scripts\deploy.ps1
-- 用于构建项目和更新JAR文件的部署脚本
 
 ## 注意事项
 - 确保MySQL服务已启动且配置正确

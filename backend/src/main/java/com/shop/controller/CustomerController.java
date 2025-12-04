@@ -1,10 +1,10 @@
 package com.shop.controller;
 
 import com.shop.entity.Customer;
-import com.shop.entity.PurchaseIntent;
+import com.shop.entity.Order;
 import com.shop.exception.AuthenticationException;
 import com.shop.service.CustomerService;
-import com.shop.service.PurchaseIntentService;
+import com.shop.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +28,7 @@ public class CustomerController {
     private CustomerService customerService;
     
     @Autowired
-    private PurchaseIntentService purchaseIntentService;
+    private OrderService orderService;
 
     // 客户注册
     @PostMapping("/register")
@@ -128,15 +128,15 @@ public class CustomerController {
         }
     }
 
-    // 获取当前客户的购买历史
+    // 获取当前客户的订单历史
     @GetMapping("/orders")
-    public ResponseEntity<List<PurchaseIntent>> getCustomerOrders() {
+    public ResponseEntity<List<Order>> getCustomerOrders() {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth.getName();
             
             Customer customer = customerService.getCustomerByUsername(username);
-            List<PurchaseIntent> orders = purchaseIntentService.getPurchaseIntentsByCustomerId(customer.getId());
+            List<Order> orders = orderService.getOrdersByCustomerId(customer.getId());
             
             return ResponseEntity.ok(orders);
         } catch (AuthenticationException e) {
