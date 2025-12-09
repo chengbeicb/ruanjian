@@ -274,13 +274,8 @@ export default {
       this.snackbar.show = true
     },
     
-<<<<<<< HEAD
-    fetchPurchaseIntents() {
-      this.$http.get('/purchase-intents')
-=======
     fetchOrders() {
       this.$http.get('/api/seller/orders')
->>>>>>> 4d4a2ff (升级需求B的后端开发，包含开发日志)
         .then(response => {
           this.orders = response.data
         })
@@ -303,15 +298,6 @@ export default {
           })
       }
     },
-<<<<<<< HEAD
-    cancelPurchase(id) {
-      if (confirm('确认取消此交易吗？取消后商品将解冻。')) {
-        this.$http.put(`/purchase-intents/${id}/cancel`)
-          .then(response => {
-            this.fetchPurchaseIntents()
-            // 修改为使用showSnackbar方法
-            this.showSnackbar('交易已取消')
-=======
     
     prepareOrder(id) {
       if (confirm('确认已备货完成吗？')) {
@@ -319,7 +305,6 @@ export default {
           .then(() => {
             this.fetchOrders()
             this.showSnackbar('备货完成')
->>>>>>> 4d4a2ff (升级需求B的后端开发，包含开发日志)
           })
           .catch(error => {
             console.error('更新订单失败:', error)

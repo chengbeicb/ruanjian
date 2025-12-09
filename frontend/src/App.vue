@@ -11,6 +11,16 @@
           <v-btn to="/customer/login" text>用户登录</v-btn>
         </template>
         <template v-else>
+          <!-- 收藏夹图标 -->
+          <v-btn to="/customer/favorites" text>
+            <v-icon>mdi-heart</v-icon>
+            <span class="ml-1 hidden-sm-and-down">收藏</span>
+          </v-btn>
+          <!-- 购物车图标 -->
+          <v-btn to="/customer/cart" text>
+            <v-icon>mdi-cart</v-icon>
+            <span class="ml-1 hidden-sm-and-down">购物车</span>
+          </v-btn>
           <v-btn to="/customer/orders" text>我的订单</v-btn>
           <v-btn @click="logoutCustomer" text>客户退出</v-btn>
         </template>

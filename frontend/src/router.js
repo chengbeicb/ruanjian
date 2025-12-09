@@ -11,6 +11,9 @@ import CustomerRegister from './views/CustomerRegister.vue'
 import CustomerLogin from './views/CustomerLogin.vue'
 import CustomerOrderHistory from './views/CustomerOrderHistory.vue'
 import CustomerManagement from './views/CustomerManagement.vue'
+import ShoppingCart from './views/ShoppingCart.vue'
+import FavoriteList from './views/FavoriteList.vue'
+import OrderCheckout from './views/OrderCheckout.vue'
 
 Vue.use(Router)
 
@@ -102,6 +105,24 @@ export default new Router({
       path: '/customer/orders',
       name: 'customer-order-history',
       component: CustomerOrderHistory,
+      beforeEnter: requireCustomerAuth
+    },
+    {
+      path: '/customer/cart',
+      name: 'shopping-cart',
+      component: ShoppingCart,
+      beforeEnter: requireCustomerAuth
+    },
+    {
+      path: '/customer/favorites',
+      name: 'favorite-list',
+      component: FavoriteList,
+      beforeEnter: requireCustomerAuth
+    },
+    {
+      path: '/customer/checkout',
+      name: 'order-checkout',
+      component: OrderCheckout,
       beforeEnter: requireCustomerAuth
     }
   ]
