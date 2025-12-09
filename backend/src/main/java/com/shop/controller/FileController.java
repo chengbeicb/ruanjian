@@ -20,7 +20,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/files")
-@CrossOrigin(origins = "*", maxAge = 3600)
+// @CrossOrigin 已移除，由 SecurityConfig 全局配置 CORS
 public class FileController {
 
     // 上传文件存储路径

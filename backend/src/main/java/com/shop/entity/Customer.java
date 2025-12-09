@@ -2,6 +2,7 @@ package com.shop.entity;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "customers")
@@ -15,6 +16,7 @@ public class Customer {
     private String username;
     
     @Column(nullable = false)
+    @JsonIgnore  // 不在API响应中暴露密码
     private String password;
     
     private String phone;

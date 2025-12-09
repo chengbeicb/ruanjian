@@ -1,21 +1,36 @@
 package com.shop.controller.seller;
 
 import com.shop.entity.Order;
+import com.shop.repository.OrderRepository;
 import com.shop.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/seller/orders")
-@CrossOrigin(origins = "http://localhost:8081", allowCredentials = "true", maxAge = 3600)
+// @CrossOrigin 已移除，由 SecurityConfig 全局配置 CORS
 public class SellerOrderController {
     
     @Autowired
     private OrderService orderService;
+    
+    @Autowired
+    private OrderRepository orderRepository;
+    
+    /**
+     * 获取所有订单列表（商家）
+     * GET /api/seller/orders
+     */
+    @GetMapping
+    public ResponseEntity<List<Order>> getAllOrders() {
+        List<Order> orders = orderRepository.findAllByOrderByCreateTimeDesc();
+        return ResponseEntity.ok(orders);
+    }
     
     /**
      * 商家确认订单

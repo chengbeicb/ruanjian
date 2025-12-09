@@ -1,6 +1,7 @@
 package com.shop.entity;
 
 import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "order_items")
@@ -13,6 +14,7 @@ public class OrderItem {
     // 所属订单
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnore  // 防止JSON序列化时循环引用
     private Order order;
     
     // 商品

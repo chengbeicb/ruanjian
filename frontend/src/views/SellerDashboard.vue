@@ -84,7 +84,7 @@ export default {
   methods: {
     fetchDashboardData() {
       // 获取卖家商品数量
-      this.$http.get('/products/seller')
+      this.$http.get('/api/products/seller')
         .then(response => {
           this.productCount = response.data.length
         })

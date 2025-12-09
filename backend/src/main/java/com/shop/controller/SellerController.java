@@ -20,7 +20,7 @@ import java.util.Map;
 // 修改第21行的@RequestMapping
 @RestController
 @RequestMapping("/api/seller") // 移除/api前缀
-@CrossOrigin(origins = "*", maxAge = 3600)
+// @CrossOrigin 已移除，由 SecurityConfig 全局配置 CORS
 public class SellerController {
 
     @Autowired
@@ -132,18 +132,17 @@ public class SellerController {
         try {
             // 检查是否已有卖家账号
             if (sellerService.existsByUsername("admin")) {
-                // 如果admin账号存在但未激活，自动激活它
+                // 如果admin账号存在，确保它是激活状态
                 try {
                     Seller existingAdmin = sellerService.getSellerByUsername("admin");
                     if (!Boolean.TRUE.equals(existingAdmin.getActive())) {
                         existingAdmin.setActive(true);
                         sellerService.updateSeller(existingAdmin);
-                        return ResponseEntity.ok(existingAdmin);
                     }
+                    return ResponseEntity.ok(existingAdmin);
                 } catch (SellerNotFoundException ignored) {
-                    // 如果抛出异常，继续执行原逻辑
+                    // 如果抛出异常，继续执行创建逻辑
                 }
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
             
             Seller seller = new Seller();

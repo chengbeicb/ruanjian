@@ -91,8 +91,15 @@ public class SellerServiceImpl implements SellerService {
             throw new AuthenticationException("账号未激活，请联系管理员");
         }
         
-        // 直接比较密码
-        return password.equals(seller.getPassword());
+        // 使用 PasswordEncoder 比较加密密码，或者直接比较明文（兼容旧数据）
+        String storedPassword = seller.getPassword();
+        if (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$")) {
+            // 加密密码，使用 BCrypt 比较
+            return passwordEncoder.matches(password, storedPassword);
+        } else {
+            // 明文密码，直接比较
+            return password.equals(storedPassword);
+        }
     }
     
     @Override

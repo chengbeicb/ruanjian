@@ -25,8 +25,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         // 为所有路径添加CORS支持，包括静态资源
+        // 使用 allowedOriginPatterns 替代 allowedOrigins 以支持 allowCredentials
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:8081", "http://127.0.0.1:8081")
+                .allowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);

@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/favorites")
-@CrossOrigin(origins = "http://localhost:8081", allowCredentials = "true", maxAge = 3600)
+// @CrossOrigin 已移除，由 SecurityConfig 全局配置 CORS
 public class FavoriteController {
     
     @Autowired
@@ -73,6 +73,32 @@ public class FavoriteController {
     }
     
     /**
+     * 收藏商品（通过 URL 路径传递 productId）
+     * POST /api/favorites/{productId}
+     */
+    @PostMapping("/{productId}")
+    public ResponseEntity<?> addFavoriteByPath(Authentication authentication, @PathVariable Long productId) {
+        try {
+            Customer customer = customerRepository.findByUsername(authentication.getName())
+                    .orElseThrow(() -> new RuntimeException("客户不存在"));
+            
+            Favorite favorite = favoriteService.addFavorite(customer, productId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "收藏成功");
+            response.put("favorite", favorite);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    /**
      * 取消收藏
      * DELETE /api/favorites/{productId}
      */
@@ -110,7 +136,8 @@ public class FavoriteController {
             boolean isFavorite = favoriteService.isFavorite(customer, productId);
             
             Map<String, Object> response = new HashMap<>();
-            response.put("isFavorite", isFavorite);
+            response.put("favorited", isFavorite);  // 前端期望的字段名
+            response.put("isFavorite", isFavorite); // 兼容
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {

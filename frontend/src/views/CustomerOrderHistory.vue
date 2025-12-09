@@ -455,7 +455,9 @@ export default {
       
       this.cancelDialog.loading = true
       
-      this.$http.put(`/api/orders/${this.cancelDialog.order.id}/cancel?reason=${encodeURIComponent(this.cancelDialog.reason)}`)
+      this.$http.put(`/api/orders/${this.cancelDialog.order.id}/cancel`, {
+        reason: this.cancelDialog.reason
+      })
         .then(() => {
           this.showSnackbar('订单已取消')
           this.cancelDialog.show = false

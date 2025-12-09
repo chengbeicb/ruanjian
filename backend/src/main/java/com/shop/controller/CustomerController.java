@@ -21,7 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/customer")
-@CrossOrigin(origins = "*", maxAge = 3600)
+// @CrossOrigin 已移除，由 SecurityConfig 全局配置 CORS
 public class CustomerController {
 
     @Autowired

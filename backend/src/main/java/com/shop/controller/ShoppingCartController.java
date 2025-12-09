@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/cart")
-@CrossOrigin(origins = "http://localhost:8081", allowCredentials = "true", maxAge = 3600)
+// @CrossOrigin 已移除，由 SecurityConfig 全局配置 CORS
 public class ShoppingCartController {
     
     @Autowired
@@ -137,8 +137,20 @@ public class ShoppingCartController {
             Customer customer = customerRepository.findByUsername(authentication.getName())
                     .orElseThrow(() -> new RuntimeException("客户不存在"));
             
+            // 处理 cartIds - JSON 解析时数字可能是 Integer，需要转换为 Long
             @SuppressWarnings("unchecked")
-            List<Long> cartIds = (List<Long>) request.get("cartIds");
+            List<?> rawCartIds = (List<?>) request.get("cartIds");
+            List<Long> cartIds = rawCartIds.stream()
+                    .map(id -> {
+                        if (id instanceof Integer) {
+                            return ((Integer) id).longValue();
+                        } else if (id instanceof Long) {
+                            return (Long) id;
+                        } else {
+                            return Long.parseLong(id.toString());
+                        }
+                    })
+                    .collect(java.util.stream.Collectors.toList());
             
             shoppingCartService.moveToFavorites(customer, cartIds);
             

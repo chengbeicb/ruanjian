@@ -353,7 +353,9 @@ export default {
         return
       }
       
-      this.$http.put(`/api/seller/orders/${this.selectedOrder.id}/cancel?reason=${encodeURIComponent(this.cancelReason)}`)
+      this.$http.put(`/api/seller/orders/${this.selectedOrder.id}/cancel`, {
+        reason: this.cancelReason
+      })
         .then(() => {
           this.fetchOrders()
           this.showCancelOrderDialog = false

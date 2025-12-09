@@ -102,7 +102,7 @@ export default {
         defaultAddress: this.form.defaultAddress
       }
       
-      this.$http.post('/customer/register', customerData)
+      this.$http.post('/api/customer/register', customerData)
         .then(() => {
           this.registering = false
           this.snackbar = {

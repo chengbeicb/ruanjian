@@ -23,4 +23,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     
     // 查找客户的指定状态订单
     List<Order> findByCustomerAndStatusOrderByCreateTimeDesc(Customer customer, OrderStatus status);
+    
+    // 获取所有订单（按创建时间倒序）
+    List<Order> findAllByOrderByCreateTimeDesc();
+    
+    // 根据客户ID查找订单
+    List<Order> findByCustomerIdOrderByCreateTimeDesc(Long customerId);
 }

@@ -113,7 +113,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("*");
+        // 使用 allowedOriginPatterns 替代 "*"，以支持 allowCredentials
+        configuration.addAllowedOriginPattern("http://localhost:*");
+        configuration.addAllowedOriginPattern("http://127.0.0.1:*");
         configuration.addAllowedMethod("*"); // 允许所有HTTP方法
         configuration.addAllowedHeader("*"); // 允许所有请求头
         configuration.setAllowCredentials(true); // 允许携带凭证（如cookie）

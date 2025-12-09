@@ -304,7 +304,7 @@ export default {
           const formData = new FormData()
           formData.append('file', file)
           
-          return this.$http.post('/files/upload', formData, {
+          return this.$http.post('/api/files/upload', formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
@@ -347,7 +347,7 @@ export default {
       
       if (this.editingProduct) {
         // 更新商品
-        this.$http.put(`/products/${this.editingProduct.id}`, productData)
+        this.$http.put(`/api/products/${this.editingProduct.id}`, productData)
           .then(() => {
             this.saving = false
             this.fetchProducts()
@@ -361,7 +361,7 @@ export default {
           })
       } else {
         // 创建商品
-        this.$http.post('/products', productData)
+        this.$http.post('/api/products', productData)
           .then(() => {
             this.saving = false
             this.fetchProducts()
@@ -467,7 +467,7 @@ export default {
     toggleProductStatus(product) {
       const newStatus = !product.available
       // 调用正确的API端点，而不是不存在的/status端点
-      const endpoint = newStatus ? `/products/${product.id}/publish` : `/products/${product.id}/unpublish`
+      const endpoint = newStatus ? `/api/products/${product.id}/publish` : `/api/products/${product.id}/unpublish`
       
       this.$http.put(endpoint)
         .then(response => {

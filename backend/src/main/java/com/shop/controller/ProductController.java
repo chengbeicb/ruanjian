@@ -17,7 +17,7 @@ import java.util.List;
 // 修改第21行的@RequestMapping
 @RestController
 @RequestMapping("/api/products") // 移除/api前缀
-@CrossOrigin(origins = "*", maxAge = 3600)
+// @CrossOrigin 已移除，由 SecurityConfig 全局配置 CORS
 public class ProductController {
 
     @Autowired
