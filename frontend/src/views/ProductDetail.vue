@@ -294,10 +294,22 @@ export default {
     },
     
     goToPurchase() {
-      // 使用浏览器内置的确认框，确认后才跳转到购买表单
-      if (window.confirm('您确定要购买此商品吗？')) {
-        this.$router.push({ name: 'purchase-form', params: { id: this.id } });
+      if (!this.isCustomerLoggedIn) {
+        this.showSnackbar('请先登录', 'error')
+        return
       }
+
+      if (this.quantity < 1) {
+        this.showSnackbar('数量必须大于0', 'error')
+        return
+      }
+
+      // 将当前商品的立即购买信息存入 sessionStorage，供结算页使用
+      sessionStorage.setItem('buyNow', JSON.stringify({
+        productId: Number(this.id),
+        quantity: this.quantity
+      }))
+      this.$router.push('/customer/checkout')
     },
     goBack() {
       this.$router.go(-1)

@@ -201,6 +201,7 @@ export default {
     return {
       checkoutItems: [],
       cartIds: [],
+      buyNow: null,
       loading: false,
       submitting: false,
       formValid: false,
@@ -234,14 +235,25 @@ export default {
       this.$router.push('/customer/login')
       return
     }
-    
-    // 获取从购物车传来的cartIds
+
+    // 优先检查 buy-now 流程
+    const buyNowData = sessionStorage.getItem('buyNow')
+    if (buyNowData) {
+      this.buyNow = JSON.parse(buyNowData)
+      if (!this.buyNow?.productId || !this.buyNow?.quantity) {
+        sessionStorage.removeItem('buyNow')
+        this.$router.push('/customer/cart')
+        return
+      }
+      return
+    }
+
+    // 获取从购物车传来的 cartIds
     const storedCartIds = sessionStorage.getItem('checkoutCartIds')
     if (!storedCartIds) {
       this.$router.push('/customer/cart')
       return
     }
-    
     this.cartIds = JSON.parse(storedCartIds)
     if (this.cartIds.length === 0) {
       this.$router.push('/customer/cart')
@@ -249,7 +261,11 @@ export default {
     }
   },
   mounted() {
-    this.fetchCheckoutItems()
+    if (this.buyNow) {
+      this.fetchBuyNowItem()
+    } else {
+      this.fetchCheckoutItems()
+    }
   },
   methods: {
     showSnackbar(message, type = 'success') {
@@ -292,29 +308,60 @@ export default {
         })
     },
     
+    fetchBuyNowItem() {
+      this.loading = true
+      this.$http.get(`/api/products/${this.buyNow.productId}`)
+        .then(response => {
+          const product = response.data
+          this.checkoutItems = [{
+            id: product.id,
+            product,
+            quantity: this.buyNow.quantity
+          }]
+          this.loading = false
+        })
+        .catch(error => {
+          console.error('获取商品信息失败:', error)
+          this.showSnackbar('获取商品信息失败', 'error')
+          this.loading = false
+          this.$router.push('/customer/cart')
+        })
+    },
+    
     submitOrder() {
       if (!this.$refs.orderForm.validate()) {
         this.showSnackbar('请填写完整的收货信息', 'error')
         return
       }
-      
+
       this.submitting = true
       
-      const orderData = {
-        cartIds: this.cartIds,
+      const baseData = {
         receiverName: this.orderForm.receiverName,
         receiverPhone: this.orderForm.receiverPhone,
         shippingAddress: this.orderForm.shippingAddress,
         remark: this.orderForm.remark
       }
+
+      const request = this.buyNow
+        ? this.$http.post('/api/orders/buy-now', {
+            ...baseData,
+            productId: this.buyNow.productId,
+            quantity: this.buyNow.quantity
+          })
+        : this.$http.post('/api/orders', {
+            ...baseData,
+            cartIds: this.cartIds
+          })
       
-      this.$http.post('/api/orders', orderData)
+      request
         .then(response => {
           this.submitting = false
-          // 清除sessionStorage
+          // 清除 sessionStorage
           sessionStorage.removeItem('checkoutCartIds')
+          sessionStorage.removeItem('buyNow')
           // 显示成功对话框
-          this.successDialog.orderNumber = response.data.orderNumber
+          this.successDialog.orderNumber = response.data.order?.orderNumber || response.data.orderNumber
           this.successDialog.show = true
         })
         .catch(error => {

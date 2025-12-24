@@ -27,6 +27,49 @@ public class OrderService {
     
     @Autowired
     private ShoppingCartRepository shoppingCartRepository;
+
+    /**
+     * 直接购买（跳过购物车）
+     */
+    @Transactional
+    public Order createOrderDirect(Customer customer, Long productId, Integer quantity,
+                                   String receiverName, String receiverPhone,
+                                   String shippingAddress, String remark) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("商品不存在"));
+
+        if (product.getStatus() != Product.ProductStatus.AVAILABLE) {
+            throw new RuntimeException("商品不可购买");
+        }
+        if (product.getStockQuantity() < quantity) {
+            throw new RuntimeException("库存不足");
+        }
+
+        Order order = new Order();
+        order.setOrderNumber("ORD" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 6).toUpperCase());
+        order.setCustomer(customer);
+        order.setStatus(Order.OrderStatus.PENDING);
+        order.setReceiverName(receiverName);
+        order.setReceiverPhone(receiverPhone);
+        order.setShippingAddress(shippingAddress);
+        order.setRemark(remark);
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(order);
+        orderItem.setProduct(product);
+        orderItem.setQuantity(quantity);
+        orderItem.setUnitPrice(product.getPrice());
+        orderItem.setSubtotal(product.getPrice() * quantity);
+        order.getOrderItems().add(orderItem);
+
+        order.setTotalAmount(orderItem.getSubtotal());
+
+        // 扣减库存
+        product.setStockQuantity(product.getStockQuantity() - quantity);
+        productRepository.save(product);
+
+        return orderRepository.save(order);
+    }
     
     /**
      * 创建订单（从购物车）

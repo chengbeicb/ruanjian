@@ -70,6 +70,46 @@ public class OrderController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    /**
+     * 直接购买（无需购物车）
+     * POST /api/orders/buy-now
+     */
+    @PostMapping("/buy-now")
+    public ResponseEntity<?> buyNow(Authentication authentication, @RequestBody Map<String, Object> request) {
+        try {
+            Customer customer = customerRepository.findByUsername(authentication.getName())
+                    .orElseThrow(() -> new RuntimeException("客户不存在"));
+
+            Object productIdObj = request.get("productId");
+            Object qtyObj = request.get("quantity");
+            if (productIdObj == null || qtyObj == null) {
+                throw new RuntimeException("缺少商品或数量");
+            }
+            Long productId = Long.parseLong(productIdObj.toString());
+            Integer quantity = Integer.parseInt(qtyObj.toString());
+
+            String receiverName = (String) request.get("receiverName");
+            String receiverPhone = (String) request.get("receiverPhone");
+            String shippingAddress = (String) request.get("shippingAddress");
+            String remark = (String) request.get("remark");
+
+            Order order = orderService.createOrderDirect(customer, productId, quantity,
+                    receiverName, receiverPhone, shippingAddress, remark);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "订单创建成功");
+            response.put("order", order);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
     
     /**
      * 获取客户订单列表
@@ -96,7 +136,7 @@ public class OrderController {
      * 获取订单详情
      * GET /api/orders/{id}
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<?> getOrder(@PathVariable Long id) {
         try {
             Order order = orderService.getOrderById(id);
@@ -114,7 +154,7 @@ public class OrderController {
      * 客户取消订单
      * PUT /api/orders/{id}/cancel
      */
-    @PutMapping("/{id}/cancel")
+    @PutMapping("/{id:\\d+}/cancel")
     public ResponseEntity<?> cancelOrder(Authentication authentication, @PathVariable Long id, 
                                         @RequestBody Map<String, String> request) {
         try {
