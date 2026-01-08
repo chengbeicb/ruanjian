@@ -83,9 +83,13 @@ public class SellerOrderController {
      * PUT /api/seller/orders/{id}/ship
      */
     @PutMapping("/{id}/ship")
-    public ResponseEntity<?> shipOrder(@PathVariable Long id) {
+    public ResponseEntity<?> shipOrder(@PathVariable Long id, @RequestBody(required = false) Map<String, String> request) {
         try {
-            Order order = orderService.shipOrder(id);
+            // 获取物流信息，如果没有提供则使用默认值
+            String logisticsCompany = request != null ? request.getOrDefault("logisticsCompany", "顺丰速运") : "顺丰速运";
+            String logisticsNumber = request != null ? request.getOrDefault("logisticsNumber", "SF" + System.currentTimeMillis()) : "SF" + System.currentTimeMillis();
+            
+            Order order = orderService.shipOrder(id, logisticsCompany, logisticsNumber);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);

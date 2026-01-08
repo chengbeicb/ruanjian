@@ -14,6 +14,11 @@ import CustomerManagement from './views/CustomerManagement.vue'
 import ShoppingCart from './views/ShoppingCart.vue'
 import FavoriteList from './views/FavoriteList.vue'
 import OrderCheckout from './views/OrderCheckout.vue'
+import AddressManagement from './views/AddressManagement.vue'
+import OrderPayment from './views/OrderPayment.vue'
+import LogisticsTracking from './views/LogisticsTracking.vue'
+import AfterSaleApply from './views/AfterSaleApply.vue'
+import AfterSaleList from './views/AfterSaleList.vue'
 
 Vue.use(Router)
 
@@ -123,6 +128,36 @@ export default new Router({
       path: '/customer/checkout',
       name: 'order-checkout',
       component: OrderCheckout,
+      beforeEnter: requireCustomerAuth
+    },
+    {
+      path: '/customer/addresses',
+      name: 'address-management',
+      component: AddressManagement,
+      beforeEnter: requireCustomerAuth
+    },
+    {
+      path: '/customer/payment/:orderId',
+      name: 'order-payment',
+      component: OrderPayment,
+      beforeEnter: requireCustomerAuth
+    },
+    {
+      path: '/customer/logistics/:orderId',
+      name: 'logistics-tracking',
+      component: LogisticsTracking,
+      beforeEnter: requireCustomerAuth
+    },
+    {
+      path: '/customer/after-sale/apply/:orderItemId',
+      name: 'after-sale-apply',
+      component: AfterSaleApply,
+      beforeEnter: requireCustomerAuth
+    },
+    {
+      path: '/customer/after-sales',
+      name: 'after-sale-list',
+      component: AfterSaleList,
       beforeEnter: requireCustomerAuth
     }
   ]

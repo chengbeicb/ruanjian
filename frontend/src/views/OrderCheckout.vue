@@ -78,6 +78,8 @@
             <v-card-title>
               <v-icon left>mdi-map-marker</v-icon>
               收货信息
+              <v-spacer></v-spacer>
+              <v-btn text color="primary" @click="selectAddress">选择地址</v-btn>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text>
@@ -159,6 +161,32 @@
       </v-layout>
     </v-container>
     
+    <!-- 地址选择对话框 -->
+    <v-dialog v-model="addressDialog" max-width="600px">
+      <v-card>
+        <v-card-title>选择收货地址</v-card-title>
+        <v-card-text>
+          <v-list v-if="addresses.length > 0">
+            <v-list-item v-for="addr in addresses" :key="addr.id" @click="useAddress(addr)">
+              <v-list-item-content>
+                <v-list-item-title>{{ addr.receiverName }} {{ addr.receiverPhone }}</v-list-item-title>
+                <v-list-item-subtitle>{{ addr.province }} {{ addr.city }} {{ addr.district }} {{ addr.detailAddress }}</v-list-item-subtitle>
+              </v-list-item-content>
+              <v-list-item-action v-if="addr.isDefault">
+                <v-chip small color="primary">默认</v-chip>
+              </v-list-item-action>
+            </v-list-item>
+          </v-list>
+          <v-alert v-else type="info">暂无收货地址，请手动填写</v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="addressDialog = false">取消</v-btn>
+          <v-btn color="primary" @click="$router.push('/customer/addresses')">管理地址</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    
     <!-- 订单成功对话框 -->
     <v-dialog v-model="successDialog.show" max-width="400px" persistent>
       <v-card>
@@ -173,12 +201,15 @@
             <div class="mt-2 text-body-2 grey--text">
               订单编号: {{ successDialog.orderNumber }}
             </div>
+            <div class="mt-2 text-body-1">
+              请尽快完成支付
+            </div>
           </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="goToOrders">查看订单</v-btn>
-          <v-btn text @click="goToHome">继续购物</v-btn>
+          <v-btn text @click="goToHome">稍后支付</v-btn>
+          <v-btn color="primary" @click="goToPayment">立即支付</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -211,9 +242,12 @@ export default {
         shippingAddress: '',
         remark: ''
       },
+      addresses: [],
+      addressDialog: false,
       successDialog: {
         show: false,
-        orderNumber: ''
+        orderNumber: '',
+        orderId: null
       },
       snackbar: {
         show: false,
@@ -266,12 +300,38 @@ export default {
     } else {
       this.fetchCheckoutItems()
     }
+    this.loadAddresses()
   },
   methods: {
     showSnackbar(message, type = 'success') {
       this.snackbar.message = message
       this.snackbar.type = type
       this.snackbar.show = true
+    },
+    
+    async loadAddresses() {
+      try {
+        const response = await this.$http.get('/api/addresses')
+        this.addresses = response.data
+        // 自动填充默认地址
+        const defaultAddr = this.addresses.find(addr => addr.isDefault)
+        if (defaultAddr) {
+          this.useAddress(defaultAddr)
+        }
+      } catch (error) {
+        console.error('加载地址失败:', error)
+      }
+    },
+    
+    selectAddress() {
+      this.addressDialog = true
+    },
+    
+    useAddress(addr) {
+      this.orderForm.receiverName = addr.receiverName
+      this.orderForm.receiverPhone = addr.receiverPhone
+      this.orderForm.shippingAddress = `${addr.province}${addr.city}${addr.district}${addr.detailAddress}`
+      this.addressDialog = false
     },
     
     getImageUrl(product) {
@@ -362,6 +422,7 @@ export default {
           sessionStorage.removeItem('buyNow')
           // 显示成功对话框
           this.successDialog.orderNumber = response.data.order?.orderNumber || response.data.orderNumber
+          this.successDialog.orderId = response.data.order?.id || response.data.id
           this.successDialog.show = true
         })
         .catch(error => {
@@ -369,6 +430,11 @@ export default {
           console.error('提交订单失败:', error)
           this.showSnackbar(error.response?.data || '提交订单失败，请重试', 'error')
         })
+    },
+    
+    goToPayment() {
+      this.successDialog.show = false
+      this.$router.push(`/customer/payment/${this.successDialog.orderId}`)
     },
     
     goToOrders() {

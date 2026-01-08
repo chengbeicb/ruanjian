@@ -27,9 +27,36 @@ public class Order {
     @Column(nullable = false)
     private OrderStatus status = OrderStatus.PENDING;
     
+    // 支付状态：UNPAID(待支付)、PAID(已支付)、REFUNDED(已退款)
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
+    
+    // 支付方式
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private PaymentMethod paymentMethod;
+    
+    // 支付时间
+    private LocalDateTime paymentTime;
+    
     // 订单总金额
     @Column(nullable = false)
     private Double totalAmount = 0.0;
+    
+    // 物流公司
+    @Column(length = 50)
+    private String logisticsCompany;
+    
+    // 物流单号
+    @Column(length = 100)
+    private String logisticsNumber;
+    
+    // 发货时间
+    private LocalDateTime shippingTime;
+    
+    // 签收时间
+    private LocalDateTime deliveryTime;
     
     // 收货人姓名
     private String receiverName;
@@ -185,6 +212,62 @@ public class Order {
     public void setCancelRole(CancelRole cancelRole) {
         this.cancelRole = cancelRole;
     }
+
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
+    public PaymentMethod getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public LocalDateTime getPaymentTime() {
+        return paymentTime;
+    }
+
+    public void setPaymentTime(LocalDateTime paymentTime) {
+        this.paymentTime = paymentTime;
+    }
+
+    public String getLogisticsCompany() {
+        return logisticsCompany;
+    }
+
+    public void setLogisticsCompany(String logisticsCompany) {
+        this.logisticsCompany = logisticsCompany;
+    }
+
+    public String getLogisticsNumber() {
+        return logisticsNumber;
+    }
+
+    public void setLogisticsNumber(String logisticsNumber) {
+        this.logisticsNumber = logisticsNumber;
+    }
+
+    public LocalDateTime getShippingTime() {
+        return shippingTime;
+    }
+
+    public void setShippingTime(LocalDateTime shippingTime) {
+        this.shippingTime = shippingTime;
+    }
+
+    public LocalDateTime getDeliveryTime() {
+        return deliveryTime;
+    }
+
+    public void setDeliveryTime(LocalDateTime deliveryTime) {
+        this.deliveryTime = deliveryTime;
+    }
     
     // 枚举：订单状态
     public enum OrderStatus {
@@ -200,5 +283,20 @@ public class Order {
     public enum CancelRole {
         CUSTOMER,     // 客户
         SELLER        // 商家
+    }
+    
+    // 枚举：支付状态
+    public enum PaymentStatus {
+        UNPAID,       // 待支付
+        PAID,         // 已支付
+        REFUNDED      // 已退款
+    }
+    
+    // 枚举：支付方式
+    public enum PaymentMethod {
+        BANK_CARD,      // 银行卡
+        CREDIT_CARD,    // 信用卡
+        ALIPAY,         // 支付宝
+        WECHAT          // 微信支付
     }
 }

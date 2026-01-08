@@ -27,6 +27,9 @@ public class OrderService {
     
     @Autowired
     private ShoppingCartRepository shoppingCartRepository;
+    
+    @Autowired
+    private LogisticsService logisticsService;
 
     /**
      * 直接购买（跳过购物车）
@@ -192,15 +195,27 @@ public class OrderService {
      * 开始发货
      */
     @Transactional
-    public Order shipOrder(Long orderId) {
+    public Order shipOrder(Long orderId, String logisticsCompany, String logisticsNumber) {
         Order order = getOrderById(orderId);
         
         if (order.getStatus() != Order.OrderStatus.PREPARING) {
             throw new RuntimeException("只有备货完成订单才能发货");
         }
         
+        // 检查是否已支付
+        if (order.getPaymentStatus() != Order.PaymentStatus.PAID) {
+            throw new RuntimeException("订单未支付，无法发货");
+        }
+        
         order.setStatus(Order.OrderStatus.SHIPPING);
+        order.setLogisticsCompany(logisticsCompany);
+        order.setLogisticsNumber(logisticsNumber);
+        order.setShippingTime(LocalDateTime.now());
         order.setUpdateTime(LocalDateTime.now());
+        
+        // 创建物流信息
+        logisticsService.createLogistics(order, logisticsCompany, logisticsNumber);
+        
         return orderRepository.save(order);
     }
     
@@ -216,6 +231,7 @@ public class OrderService {
         }
         
         order.setStatus(Order.OrderStatus.COMPLETED);
+        order.setDeliveryTime(LocalDateTime.now());
         order.setUpdateTime(LocalDateTime.now());
         return orderRepository.save(order);
     }
